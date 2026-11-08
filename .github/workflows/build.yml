@@ -19,6 +19,12 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Setup JDK 17 (compatible with Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Generate missing platform scaffolding (gradle/MainActivity)
         run: flutter create . --project-name omega_shield --platforms=android
 
