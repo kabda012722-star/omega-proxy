@@ -179,9 +179,9 @@ class _MainScreenState extends State<MainScreen> {
   Widget _glass({required Widget child}) => Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12))),
+            border: Border.all(color: Colors.white.withOpacity(0.12))),
         child: child,
       );
 
