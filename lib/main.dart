@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'dart:async';
 
-// ===== OMEGA Shield Design Tokens =====
 const kPink = Color(0xFFFF0055);
 const kPurple = Color(0xFF8A2BE2);
 const kDesktopUA =
@@ -14,6 +13,14 @@ void main() {
   runApp(const OmegaShield());
 }
 
+String _navUrl(NavigationAction nav) => nav.request?.url?.toString() ?? '';
+
+bool _isAppScheme(String u) =>
+    u.startsWith('binance://') ||
+    u.contains('play.google.com') ||
+    u.contains('apps.apple.com') ||
+    u.startsWith('market://');
+
 class OmegaShield extends StatelessWidget {
   const OmegaShield({super.key});
   @override
@@ -23,13 +30,11 @@ class OmegaShield extends StatelessWidget {
         theme: ThemeData(
           scaffoldBackgroundColor: const Color(0xFF0A0A1A),
           brightness: Brightness.dark,
-          fontFamily: 'Tajawal',
         ),
         home: const SplashScreen(),
       );
 }
 
-// ===== 1. SPLASH =====
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
@@ -41,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 2), () {
-      Navigator.push(context,
+      Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (_) => const MainScreen()));
     });
   }
@@ -50,13 +55,18 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) => Scaffold(
         body: Center(
           child: ShaderMask(
-            shaderCallback: (r) => const LinearGradient(
-                    colors: [kPink, kPurple])
-                .createShader(r),
+            shaderCallback: (r) =>
+                const LinearGradient(colors: [kPink, kPurple]).createShader(r),
             child: const Text('\u03A9MEGA\u276F\u276F\ud83e\ude78',
                 style: TextStyle(
                     fontSize: 48,
-// ===== 2. MAIN (Dashboard) =====
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
+          ),
+        ),
+      );
+}
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
   @override
@@ -69,7 +79,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _readClipboard(); // Auto-paste Binance link if present
+    _readClipboard();
   }
 
   Future<void> _readClipboard() async {
@@ -87,10 +97,8 @@ class _MainScreenState extends State<MainScreen> {
           content: Text('الرجاء لصق رابط التحقق من Binance')));
       return;
     }
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => WebViewScreen(url: Uri.parse(url))));
+    Navigator.push(context,
+        MaterialPageRoute(builder: (_) => WebViewScreen(url: Uri.parse(url))));
   }
 
   @override
@@ -118,23 +126,16 @@ class _MainScreenState extends State<MainScreen> {
                       const SizedBox(height: 8),
                       const Text(
                           'أداة احترافية لتخطي تحميل التطبيق - Binance KYC',
-                          style: TextStyle(
-                              color: Colors.white70, fontSize: 14)),
+                          style: TextStyle(color: Colors.white70, fontSize: 14)),
                       const SizedBox(height: 32),
                       _glass(
-                        child: Column(
-                          children: [
-                            TextField(
-                              controller: ctrl,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: const InputDecoration(
-                                  hintText:
-                                      'ألصق رابط التحقق من Binance هنا...',
-                                  hintStyle:
-                                      TextStyle(color: Colors.white38),
-                                  border: InputBorder.none),
-                            ),
-                          ],
+                        child: TextField(
+                          controller: ctrl,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                              hintText: 'ألصق رابط التحقق من Binance هنا...',
+                              hintStyle: TextStyle(color: Colors.white38),
+                              border: InputBorder.none),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -185,24 +186,15 @@ class _MainScreenState extends State<MainScreen> {
       );
 
   Widget _link(String label, String url) => GestureDetector(
-        onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => WebViewScreen(url: Uri.parse(url)))),
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => WebViewScreen(url: Uri.parse(url)))),
         child: Text(label,
             textAlign: TextAlign.center,
             style: const TextStyle(color: kPurple, fontSize: 13)),
       );
 }
 
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
-          ),
-        ),
-      );
-}
 
-// ===== 3. WebView (Core Bypass Engine) =====
 class WebViewScreen extends StatefulWidget {
   final Uri url;
   const WebViewScreen({super.key, required this.url});
@@ -213,14 +205,9 @@ class WebViewScreen extends StatefulWidget {
 class _WebViewScreenState extends State<WebViewScreen> {
   double progress = 0.0;
 
-  bool _isAppScheme(String u) =>
-      u.startsWith('binance://') ||
-      u.contains('play.google.com') ||
-      u.contains('apps.apple.com') ||
-      u.contains('market://');
-
   @override
   Widget build(BuildContext context) => Scaffold(
+        backgroundColor: const Color(0xFF0A0A1A),
         appBar: AppBar(
           backgroundColor: const Color(0xFF0A0A1A),
           title: const Text('\u03A9MEGA Shield',
@@ -240,13 +227,12 @@ class _WebViewScreenState extends State<WebViewScreen> {
             userAgent: kDesktopUA,
             mediaPlaybackRequiresUserGesture: false,
             javaScriptEnabled: true,
-            clearCache: false,
           ),
           onProgressChanged: (c, p) => setState(() => progress = p.toDouble()),
           shouldOverrideUrlLoading: (c, nav) async {
-            final u = nav.url.toString();
-            // Block Binance trying to force the official app / store
-            if (_isAppScheme(u)) return NavigationActionPolicy.CANCEL;
+            if (_isAppScheme(_navUrl(nav))) {
+              return NavigationActionPolicy.CANCEL;
+            }
             return NavigationActionPolicy.ALLOW;
           },
         ),
